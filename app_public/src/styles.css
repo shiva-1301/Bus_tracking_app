@@ -1,0 +1,26 @@
+/* Import a custom font from Google Fonts for branding */
+@import url('https://fonts.googleapis.com/css?family=Lobster');
+@import "bootstrap/dist/css/bootstrap.min.css";
+/* Make the main layout a flex container that fills the viewport */
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Custom style for the brand name in the navbar */
+.navbar-brand {
+  font-family: 'Lobster', cursive;
+  font-size: 1.75rem;
+}
+
+/* This is the main content area that will grow to fill available space */
+.container.mt-4 {
+  flex: 1; /* This makes the content area expand */
+}
+
+/* Basic styling for the footer */
+.footer {
+  width: 100%;
+  flex-shrink: 0; /* Prevents the footer from shrinking */
+}

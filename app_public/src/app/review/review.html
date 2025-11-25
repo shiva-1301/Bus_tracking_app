@@ -1,0 +1,96 @@
+<div class="flex flex-col items-center justify-center p-10 bg-white rounded-2xl shadow-xl max-w-lg mx-auto">
+  <!-- Heading -->
+  <h2 class="text-3xl font-bold text-yellow-600 mb-6">User Reviews</h2>
+
+  <!-- Review Form -->
+  <div class="w-full mb-6 p-6 border border-yellow-200 rounded-xl bg-yellow-50">
+    <!-- Error Message -->
+    <div *ngIf="errorMessage" class="mb-4 p-3 bg-red-100 text-red-700 rounded-lg">
+      {{ errorMessage }}
+    </div>
+
+    <!-- Input for Username (pre-filled if logged in but still editable) -->
+    <input
+      [(ngModel)]="username"
+      placeholder="Enter your name"
+      class="w-full mb-4 p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-400"
+    />
+
+    <!-- Input for Bus Number (optional) -->
+    <input
+      [(ngModel)]="busNumber"
+      placeholder="Bus Number (optional)"
+      class="w-full mb-4 p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-400"
+    />
+
+    <!-- Rating Selection -->
+    <div class="mb-4">
+      <label class="block text-gray-700 mb-2">Rating:</label>
+      <div class="flex space-x-2">
+        <button 
+          *ngFor="let star of [1,2,3,4,5]" 
+          (click)="rating = star"
+          class="text-2xl"
+          [class.text-yellow-500]="star <= rating"
+          [class.text-gray-300]="star > rating"
+        >
+          ★
+        </button>
+      </div>
+    </div>
+
+    <!-- Textarea for Review -->
+    <textarea
+      [(ngModel)]="review"
+      placeholder="Write your review"
+      rows="3"
+      class="w-full mb-4 p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-400"
+    ></textarea>
+
+    <!-- Submit Button -->
+    <button
+      (click)="addReview()"
+      [disabled]="isSubmitting"
+      class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-8 rounded-full transition transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      {{ isSubmitting ? 'Submitting...' : 'Submit Review' }}
+    </button>
+  </div>
+
+  <!-- Reviews List -->
+  <div class="mt-4 w-full">
+    <h3 class="text-xl font-semibold text-gray-700 mb-3">Recent Reviews</h3>
+
+    <div
+      *ngFor="let r of reviews"
+      class="p-4 border border-gray-200 rounded-xl mb-3 bg-gray-50"
+    >
+      <div class="flex justify-between items-start mb-2">
+        <p class="font-bold text-gray-800">{{ r.username }}</p>
+        <div class="flex">
+          <span *ngFor="let star of [1,2,3,4,5]" 
+                [class.text-yellow-500]="star <= r.rating"
+                [class.text-gray-300]="star > r.rating">★</span>
+        </div>
+      </div>
+      <p *ngIf="r.busNumber" class="text-sm text-gray-500 mb-2">Bus: {{ r.busNumber }}</p>
+      <p class="text-gray-600">{{ r.comment }}</p>
+      <p *ngIf="r.createdAt" class="text-xs text-gray-400 mt-2">
+        {{ r.createdAt | date:'medium' }}
+      </p>
+    </div>
+
+    <!-- No Reviews Message -->
+    <div *ngIf="reviews.length === 0" class="p-4 text-center text-gray-500">
+      No reviews yet. Be the first to leave a review!
+    </div>
+  </div>
+
+  <!-- Back to Home Button -->
+  <button
+    [routerLink]="['/']"
+    class="mt-6 text-sm text-gray-500 hover:text-indigo-600"
+  >
+    ← Back to Home Page
+  </button>
+</div>

@@ -1,0 +1,12 @@
+<div class="map-search-container">
+  <h2>📍 Your Current Location</h2>
+
+  <div *ngIf="latitude && longitude; else loading">
+    <p>Latitude: {{ latitude }}</p>
+    <p>Longitude: {{ longitude }}</p>
+  </div>
+
+  <ng-template #loading>
+    <p>Fetching your location...</p>
+  </ng-template>
+</div>

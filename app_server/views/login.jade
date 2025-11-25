@@ -1,0 +1,86 @@
+doctype html
+html(lang="en")
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport", content="width=device-width, initial-scale=1.0")
+    title Login OR Register
+    link(rel="stylesheet", href="/stylesheets/login_page.css")
+  body
+    img.logo(src="/static/igniteXT icon.png", alt="Logo")
+
+    span.logo-text(style="font-family: 'Times New Roman', Times, serif; font-size: 3rem; font-weight: bolder; margin-top: 20px; margin-bottom: 20px; color: yellow")
+      span(style="margin-left: -5px; font-weight: 700; margin-right: -5px; color: white; font-family: 'Times New Roman', Times, serif; margin-left: -15px; font-size: 3rem;") I
+      | gnite 
+      span(style="margin-left: -5px; font-weight: 700; color: white; font-family: 'Times New Roman', Times, serif; font-size: 3rem;") XT
+
+    .container#container
+      // Register Form
+      .form-container.sign-up-container
+        form(action="/auth", method="POST")
+          h1 Create Account
+          input(type="hidden", name="action", value="register")
+
+          .input-box
+            i.bx.bxs-user
+            input(type="text", id="username", name="username", placeholder="Enter your username", required)
+
+          .input-box
+            i.bx.bxs-envelope
+            input(type="email", id="email", name="email", placeholder="Enter your email", required)
+
+          .input-box
+            i.bx.bxs-lock-alt
+            input(type="password", id="password", name="password", placeholder="Enter your password", required)
+
+          // Role Selection
+          .role-selection
+            label
+              input(type="radio", name="role", value="student", required)
+              |  Student
+            label
+              input(type="radio", name="role", value="faculty")
+              |  Faculty
+
+          button(type="submit") Sign Up
+
+      // Login Form
+      .form-container.sign-in-container
+        form(action="/auth", method="POST")
+          h1 Sign In
+          input(type="hidden", name="action", value="login")
+
+          .input-box
+            i.bx.bxs-envelope
+            input(type="email", id="email", name="email", placeholder="Enter your email", required)
+
+          .input-box
+            i.bx.bxs-lock-alt
+            input(type="password", id="password", name="password", placeholder="Enter your password", required)
+
+          button(type="submit") Sign In
+
+      // Overlay Section
+      .overlay-container
+        .overlay
+          .overlay-panel.overlay-left
+            h1 Welcome Back!
+            p To keep connected with us, please login with your personal info
+            button.ghost#signIn Sign In
+          .overlay-panel.overlay-right
+            h1 Hello, Friend!
+            p Enter your personal details and start your journey with us
+            button.ghost#signUp Sign Up
+
+    // JavaScript
+    script.
+      const signUpButton = document.getElementById('signUp');
+      const signInButton = document.getElementById('signIn');
+      const container = document.getElementById('container');
+
+      signUpButton.addEventListener('click', () => {
+          container.classList.add('right-panel-active');
+      });
+
+      signInButton.addEventListener('click', () => {
+          container.classList.remove('right-panel-active');
+      });
