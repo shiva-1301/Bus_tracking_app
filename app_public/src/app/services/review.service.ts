@@ -1,3 +1,4 @@
+import { environment } from '../../environments/environment';
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject, of } from 'rxjs';
@@ -18,7 +19,7 @@ export interface Review {
   providedIn: 'root'
 })
 export class ReviewService {
-  private apiUrl = 'http://localhost:3000/api/reviews';
+  private apiUrl = `${environment.apiUrl}/reviews`;
   private reviewsSubject = new BehaviorSubject<Review[]>([]);
   public reviews$ = this.reviewsSubject.asObservable();
 

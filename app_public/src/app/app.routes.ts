@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { inject } from '@angular/core';
+import { Router } from '@angular/router';
 
 // IMPORTANT: Updated imports to match the probable file names in your directories (e.g., home.ts instead of home.component.ts)
 import { HomeComponent } from './home/home'; 
@@ -18,20 +19,30 @@ import { StartTripComponent } from './driver/start-trip/start-trip';
 import { AuthService } from './services/auth.service';
 
 // Auth guards
+// Only logged-in users may open protected pages; otherwise send them to /login.
 const isAuthenticated = () => {
   const authService = inject(AuthService);
-  return authService.isAuthenticated$ || authService.getToken() ? true : { path: '/login' };
+  return authService.isAuthenticated() ? true : inject(Router).createUrlTree(['/login']);
 };
 
+// Driver-only pages: guests go to /login, passengers go to their dashboard.
 const isDriver = () => {
   const authService = inject(AuthService);
-  return authService.isDriver() ? true : { path: '/' };
+  const router = inject(Router);
+  if (!authService.isAuthenticated()) return router.createUrlTree(['/login']);
+  return authService.isDriver() ? true : router.createUrlTree(['/home']);
+};
+
+// Logged-in users skip the landing/login/register pages.
+const isGuest = () => {
+  const authService = inject(AuthService);
+  return authService.isAuthenticated() ? inject(Router).createUrlTree(['/home']) : true;
 };
 
 export const routes: Routes = [
   // 1. Landing Page: If you want the Home component to load on the base URL ('')
   // We're keeping this simple and using HomeComponent as the default landing page.
-  { path: '', component: HomeComponent, title: 'Home' }, 
+  { path: '', component: HomeComponent, title: 'SmartBus Tracker', canActivate: [isGuest] }, 
   
   // 2. Home Page for logged in users
   { path: 'home', component: HomePageComponent, title: 'Dashboard', canActivate: [isAuthenticated] },
@@ -58,15 +69,15 @@ export const routes: Routes = [
   { path: 'tracking', component: TrackingComponent, title: 'Bus Tracking', canActivate: [isAuthenticated] },
   
   // 10. NEW: Login Page
-  { path: 'login', component: LoginComponent, title: 'Login' },
+  { path: 'login', component: LoginComponent, title: 'Log in · SmartBus', canActivate: [isGuest] },
 
   // 11. NEW: Register Page
-  { path: 'register', component: RegisterComponent, title: 'Register' },
+  { path: 'register', component: RegisterComponent, title: 'Create account · SmartBus', canActivate: [isGuest] },
   
   // 12. Driver-specific Start Trip Page (protected by driver guard)
   { path: 'start-trip', component: StartTripComponent, title: 'Start Trip', canActivate: [isDriver] },
   
   // Optional: Wildcard route for 404/Unknown path redirection
   // Redirects any unknown path back to the Home page ('')
-  { path: '**', redirectTo: '', pathMatch: 'full' }
+  { path: '**', redirectTo: '' }
 ];

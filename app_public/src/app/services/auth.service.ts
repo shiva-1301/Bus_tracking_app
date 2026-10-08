@@ -1,3 +1,4 @@
+import { environment } from '../../environments/environment';
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
@@ -16,7 +17,7 @@ interface AuthResponse {
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'http://localhost:3000/api';
+  private apiUrl = environment.apiUrl;
   private tokenKey = 'auth_token';
   private userRoleKey = 'user_role';
   
@@ -48,8 +49,13 @@ export class AuthService {
   }
 
   logout(): void {
-    localStorage.removeItem(this.tokenKey);
-    localStorage.removeItem(this.userRoleKey);
+    // Clear every piece of session data so the next user starts clean
+    [this.tokenKey, this.userRoleKey, 'user_id', 'driver_id', 'user_name'].forEach(key =>
+      localStorage.removeItem(key)
+    );
+    this.userId = '';
+    this.driverId = '';
+    this.userName = '';
     this.isAuthenticatedSubject.next(false);
     this.userRoleSubject.next('');
     this.router.navigate(['/']);
