@@ -1,11 +1,12 @@
 const mongoose = require('mongoose');
+const { mongoUri } = require('../config');
 
-// Replace with your actual MongoDB connection string
-const dbURI = 'mongodb://localhost:27017/RouteFinderDB'; 
+// Hide credentials when logging the connection string
+const safeUri = mongoUri.replace(/\/\/([^@]+)@/, '//***@');
 
-mongoose.connect(dbURI)
-    .then(() => console.log('Mongoose connection open to ' + dbURI))
-    .catch(err => console.error('Mongoose connection error:', err));
+mongoose.connect(mongoUri)
+    .then(() => console.log('Mongoose connection open to ' + safeUri))
+    .catch(err => console.error('Mongoose connection error:', err.message));
 
 // Bring in your user model (ensure this runs after connection)
-require('./users'); 
+require('./users');

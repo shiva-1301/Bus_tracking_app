@@ -1,8 +1,7 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/users');
 
-// WARNING: In a real production application, ALWAYS load this from an environment variable!
-const JWT_SECRET = 'YOUR_SUPER_SECRET_KEY_NEVER_SHARE_IT_CHANGE_ME';
+const { jwtSecret: JWT_SECRET } = require('../config');
 
 const authenticateUser = async (req, res, next) => {
     try {
@@ -28,7 +27,6 @@ const authenticateUser = async (req, res, next) => {
         req.user = user;
         next();
     } catch (error) {
-        console.error('Authentication error:', error);
         res.status(401).json({ error: 'Access denied. Invalid token.' });
     }
 };

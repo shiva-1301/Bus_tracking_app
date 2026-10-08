@@ -2,9 +2,11 @@ const mongoose = require('mongoose');
 const User = mongoose.model('User'); // Import the User model defined in app_server/models/users.js
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { jwtSecret: JWT_SECRET, jwtExpiresIn } = require('../config');
+const { cleanString, isValidEmail, isValidLatitude, isValidLongitude } = require('../utils/validation');
 
-// WARNING: In a real production application, ALWAYS load this from an environment variable!
-const JWT_SECRET = 'YOUR_SUPER_SECRET_KEY_NEVER_SHARE_IT_CHANGE_ME'; 
+const MIN_PASSWORD_LENGTH = 6;
+const ROLES = ['user', 'driver'];
 
 // --- Helper Functions ---
 
@@ -16,7 +18,7 @@ const generateJwt = (user) => {
     return jwt.sign(
         { _id: user._id, email: user.email, role: user.role }, 
         JWT_SECRET, 
-        { expiresIn: '7d' } 
+        { expiresIn: jwtExpiresIn } 
     );
 };
 
@@ -28,31 +30,46 @@ const generateJwt = (user) => {
  */
 const register = async (req, res) => {
     // 1. Validate input
-    if (!req.body.email || !req.body.password) {
+    const email = cleanString(req.body.email).toLowerCase();
+    const password = typeof req.body.password === 'string' ? req.body.password : '';
+    const role = req.body.role || 'user';
+
+    if (!email || !password) {
         return res.status(400).json({"message": "Email and password are required."});
+    }
+    if (!isValidEmail(email)) {
+        return res.status(400).json({"message": "Please provide a valid email address."});
+    }
+    if (password.length < MIN_PASSWORD_LENGTH) {
+        return res.status(400).json({"message": `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`});
+    }
+    if (!ROLES.includes(role)) {
+        return res.status(400).json({"message": "Invalid account role."});
     }
 
     try {
         // 2. Hash the password before saving
         const salt = await bcrypt.genSalt(10);
-        const passwordHash = await bcrypt.hash(req.body.password, salt);
+        const passwordHash = await bcrypt.hash(password, salt);
 
         // 3. Prepare user data based on role
         const userData = {
-            email: req.body.email,
+            email,
             passwordHash: passwordHash,
-            role: req.body.role || 'user' // Default to 'user' if not specified
+            role
         };
         
         // Add driver-specific fields if registering as a driver
-        if (req.body.role === 'driver') {
-            if (!req.body.driverId) {
+        if (role === 'driver') {
+            const driverId = cleanString(req.body.driverId);
+            if (!driverId) {
                 return res.status(400).json({"message": "Driver ID is required for driver registration."});
             }
-            userData.driverId = req.body.driverId;
+            userData.driverId = driverId;
             // Bus number is optional during registration
-            if (req.body.busNumber) {
-                userData.busNumber = req.body.busNumber;
+            const busNumber = cleanString(req.body.busNumber);
+            if (busNumber) {
+                userData.busNumber = busNumber;
             }
         }
         
@@ -65,7 +82,8 @@ const register = async (req, res) => {
             token,
             role: newUser.role,
             userId: newUser._id,
-            driverId: newUser.driverId
+            driverId: newUser.driverId,
+            email: newUser.email
         });
 
     } catch (err) {
@@ -83,20 +101,22 @@ const register = async (req, res) => {
  */
 const login = async (req, res) => {
     // 1. Validate input
-    if (!req.body.email || !req.body.password) {
+    const email = cleanString(req.body.email).toLowerCase();
+    const password = typeof req.body.password === 'string' ? req.body.password : '';
+    if (!email || !password) {
         return res.status(400).json({"message": "Email and password are required."});
     }
 
     try {
-        // 2. Find the user/driver by email
-        const user = await User.findOne({ email: req.body.email });
+        // 2. Find the user/driver by email (emails are stored lowercase)
+        const user = await User.findOne({ email });
 
         if (!user) {
             return res.status(401).json({"message": "Invalid credentials."});
         }
 
         // 3. Compare the provided password with the stored hash
-        const isMatch = await bcrypt.compare(req.body.password, user.passwordHash);
+        const isMatch = await bcrypt.compare(password, user.passwordHash);
 
         if (isMatch) {
             // 4. Authentication successful: generate JWT (which includes the role for front-end redirection)
@@ -106,7 +126,8 @@ const login = async (req, res) => {
                 token: token,
                 role: user.role,
                 userId: user._id,
-                driverId: user.driverId
+                driverId: user.driverId,
+                email: user.email
             });
         } else {
             return res.status(401).json({"message": "Invalid credentials."});
@@ -122,9 +143,7 @@ const login = async (req, res) => {
  * Path: GET /api/search/bus/:busNumber
  */
 const searchDrivers = async (req, res) => {
-    const busNumber = req.params.busNumber;
-    
-    console.log('Searching for drivers with bus number:', busNumber);
+    const busNumber = cleanString(req.params.busNumber);
 
     if (!busNumber) {
         return res.status(400).json({"message": "Bus number is required."});
@@ -137,8 +156,6 @@ const searchDrivers = async (req, res) => {
             { email: 1, busNumber: 1, currentLocation: 1, driverId: 1 } // Include driverId in the response
         );
         
-        console.log('Found drivers:', driversData);
-
         if (driversData.length > 0) {
             return res.status(200).json(driversData);
         } else {
@@ -155,17 +172,17 @@ const searchDrivers = async (req, res) => {
  * Path: PUT /api/driver/location (Requires driver authentication/token)
  */
 const updateLocation = async (req, res) => {
-    // This is a placeholder: in a real app, the driver's ID would be extracted from the JWT/token
-    const { email, lat, lng } = req.body; 
+    // The driver is identified from their JWT (set by authenticateUser), never from the request body,
+    // so one user can't move another driver's bus.
+    const { lat, lng } = req.body;
 
-    if (!email || !lat || !lng) {
-        return res.status(400).json({"message": "Email, latitude, and longitude are required."});
+    if (!isValidLatitude(lat) || !isValidLongitude(lng)) {
+        return res.status(400).json({"message": "Valid numeric latitude and longitude are required."});
     }
 
     try {
-        // Find the driver by email AND ensure they have the 'driver' role
         const driver = await User.findOneAndUpdate(
-            { email: email, role: 'driver' },
+            { _id: req.user._id, role: 'driver' },
             { $set: { 
                 'currentLocation.lat': lat, 
                 'currentLocation.lng': lng, 

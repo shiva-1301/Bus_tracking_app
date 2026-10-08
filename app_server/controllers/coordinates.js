@@ -1,5 +1,13 @@
 const Coordinate = require('../models/coordinates');
 const User = require('../models/users');
+const { cleanString, isValidLatitude, isValidLongitude } = require('../utils/validation');
+
+// Routes using these handlers sit behind authenticateUser, so req.user is always the logged-in user.
+const findAuthorizedDriver = async (req, driverId) => {
+    const user = await User.findById(req.user._id);
+    if (!user || user.role !== 'driver' || user.driverId !== driverId) return null;
+    return user;
+};
 
 // Update or create driver coordinates
 const updateCoordinates = async (req, res) => {
@@ -12,20 +20,9 @@ const updateCoordinates = async (req, res) => {
             return res.status(400).json({ error: 'Driver ID, latitude, and longitude are required' });
         }
         
-        // For testing purposes, bypass authentication and find user by email or driverId
-        let user;
-        if (userId) {
-            // Verify that the user is a driver and matches the driverId
-            user = await User.findById(userId);
-            if (!user || user.role !== 'driver' || user.driverId !== driverId) {
-                return res.status(403).json({ error: 'Access denied. Invalid driver.' });
-            }
-        } else {
-            // For testing, find user by email or driverId
-            user = await User.findOne({ $or: [{ email: driverId }, { driverId: driverId }], role: 'driver' });
-            if (!user) {
-                return res.status(403).json({ error: 'Access denied. Invalid driver.' });
-            }
+        const user = await findAuthorizedDriver(req, driverId);
+        if (!user) {
+            return res.status(403).json({ error: 'Access denied. Invalid driver.' });
         }
         
         // Delete any existing coordinate records for this driver
@@ -66,34 +63,19 @@ const deleteCoordinatesByDriverId = async (req, res) => {
         const { driverId } = req.body;
         const userId = req.user ? req.user._id : null; // Extracted from JWT token in middleware
         
-        console.log('Delete coordinates request:', { driverId, userId });
         
         // Validate required fields
         if (!driverId) {
             return res.status(400).json({ error: 'Driver ID is required' });
         }
         
-        // For testing purposes, bypass authentication and find user by email or driverId
-        let user;
-        if (userId) {
-            // Verify that the user is a driver and matches the driverId
-            user = await User.findById(userId);
-            console.log('Found user by ID:', user);
-            if (!user || user.role !== 'driver' || user.driverId !== driverId) {
-                return res.status(403).json({ error: 'Access denied. Invalid driver.' });
-            }
-        } else {
-            // For testing, find user by email or driverId
-            user = await User.findOne({ $or: [{ email: driverId }, { driverId: driverId }], role: 'driver' });
-            console.log('Found user by email/driverId:', user);
-            if (!user) {
-                return res.status(403).json({ error: 'Access denied. Invalid driver.' });
-            }
+        const user = await findAuthorizedDriver(req, driverId);
+        if (!user) {
+            return res.status(403).json({ error: 'Access denied. Invalid driver.' });
         }
         
         // Delete all coordinate records for this driver
         const result = await Coordinate.deleteMany({ driverId });
-        console.log('Delete result:', result);
         
         // Also reset user's current location
         await User.findByIdAndUpdate(user._id, {
@@ -110,7 +92,7 @@ const deleteCoordinatesByDriverId = async (req, res) => {
         });
     } catch (err) {
         console.error('Error deleting coordinates:', err);
-        res.status(500).json({ error: 'Failed to delete coordinates', details: err.message });
+        res.status(500).json({ error: 'Failed to delete coordinates' });
     }
 };
 
