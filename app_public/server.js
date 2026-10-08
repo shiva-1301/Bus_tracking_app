@@ -9,7 +9,7 @@ const PORT = process.env.PORT || 3000;
 // CRITICAL STEP: Set the static file directory to the Angular production output
 // The path must point to where the 'ng build' command placed the files.
 // Assuming your angular.json output is 'dist/app-public' inside the app_public folder:
-const buildPath = path.join(__dirname, 'dist', 'app-public', 'browser'); 
+const buildPath = path.join(__dirname, 'dist', 'app_public', 'browser'); 
 // NOTE: Depending on your specific Angular version/config, 
 // the path might just be path.join(__dirname, 'dist', 'app-public') or just path.join(__dirname, 'dist')
 
