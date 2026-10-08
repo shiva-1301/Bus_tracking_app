@@ -6,49 +6,43 @@ import { RouterLink } from '@angular/router';
   standalone: true,
   imports: [RouterLink],
   template: `
-    <div class="p-8 bg-white rounded-2xl shadow-xl w-full max-w-2xl">
-      <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">How would you like to search?</h2>
-      
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-        
-        <!-- Find by Route -->
-        <a [routerLink]="['/find-by-route']"
-          class="flex flex-col items-center p-8 bg-blue-50 hover:bg-blue-100 border-2 border-blue-200 rounded-xl transition duration-150 transform hover:shadow-lg"
-        >
-          <span class="text-3xl mb-2">🛣️</span>
-          <span class="text-xl font-semibold text-blue-700">Find by Route</span>
-          <span class="text-sm text-gray-500 mt-1 text-center">Search using From and To places.</span>
-        </a>
-        
-        <!-- Find by Number -->
-        <a [routerLink]="['/find-by-number']"
-          class="flex flex-col items-center p-8 bg-green-50 hover:bg-green-100 border-2 border-green-200 rounded-xl transition duration-150 transform hover:shadow-lg"
-        >
-          <span class="text-3xl mb-2">🔢</span>
-          <span class="text-xl font-semibold text-green-700">Find by Number</span>
-          <span class="text-sm text-gray-500 mt-1 text-center">Search using a bus number.</span>
-        </a>
+    <section class="page">
+      <header class="page-header">
+        <h1 class="page-title">How would you like to search?</h1>
+        <p class="page-subtitle">Pick the option that matches what you know about your trip.</p>
+      </header>
 
-        <!-- Find by Registration -->
-        <a [routerLink]="['/find-by-registration']"
-          class="flex flex-col items-center p-8 bg-purple-50 hover:bg-purple-100 border-2 border-purple-200 rounded-xl transition duration-150 transform hover:shadow-lg"
-        >
-          <span class="text-3xl mb-2">📋</span>
-          <span class="text-xl font-semibold text-purple-700">Find by Registration</span>
-          <span class="text-sm text-gray-500 mt-1 text-center">Find drivers registered with a bus number.</span>
-        </a>
-        
-        <!-- Reviews -->
-        <a [routerLink]="['/reviews']"
-          class="flex flex-col items-center p-8 bg-yellow-50 hover:bg-yellow-100 border-2 border-yellow-200 rounded-xl transition duration-150 transform hover:shadow-lg"
-        >
-          <span class="text-3xl mb-2">⭐</span>
-          <span class="text-xl font-semibold text-yellow-600">Reviews</span>
-          <span class="text-sm text-gray-500 mt-1 text-center">Read or write user reviews.</span>
-        </a>
-        
-      </div>
-    </div>
+      <ul class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <li>
+          <a [routerLink]="['/find-by-route']" class="card-interactive flex h-full flex-col items-start gap-3">
+            <span aria-hidden="true" class="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-xl">🛣️</span>
+            <span class="font-semibold text-slate-900">Find by route</span>
+            <span class="text-sm text-slate-600">Search using your start and destination.</span>
+          </a>
+        </li>
+        <li>
+          <a [routerLink]="['/find-by-number']" class="card-interactive flex h-full flex-col items-start gap-3">
+            <span aria-hidden="true" class="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-xl">🔢</span>
+            <span class="font-semibold text-slate-900">Find by number</span>
+            <span class="text-sm text-slate-600">Look up a bus using its bus number.</span>
+          </a>
+        </li>
+        <li>
+          <a [routerLink]="['/tracking']" class="card-interactive flex h-full flex-col items-start gap-3">
+            <span aria-hidden="true" class="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-xl">📍</span>
+            <span class="font-semibold text-slate-900">Live tracking</span>
+            <span class="text-sm text-slate-600">Follow buses on the map in real time.</span>
+          </a>
+        </li>
+        <li>
+          <a [routerLink]="['/reviews']" class="card-interactive flex h-full flex-col items-start gap-3">
+            <span aria-hidden="true" class="flex h-11 w-11 items-center justify-center rounded-xl bg-accent-400/20 text-xl">⭐</span>
+            <span class="font-semibold text-slate-900">Reviews</span>
+            <span class="text-sm text-slate-600">Read or write passenger reviews.</span>
+          </a>
+        </li>
+      </ul>
+    </section>
   `
 })
 export class SearchComponent {}

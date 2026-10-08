@@ -1,96 +1,151 @@
-<div class="flex flex-col items-center justify-center p-10 bg-white rounded-2xl shadow-xl max-w-lg mx-auto">
-  <!-- Heading -->
-  <h2 class="text-3xl font-bold text-yellow-600 mb-6">User Reviews</h2>
+<section class="page">
+  <header class="page-header">
+    <h1 class="page-title">Passenger reviews</h1>
+    <p class="page-subtitle">Share how your trip went and see what other passengers are saying.</p>
+  </header>
 
-  <!-- Review Form -->
-  <div class="w-full mb-6 p-6 border border-yellow-200 rounded-xl bg-yellow-50">
-    <!-- Error Message -->
-    <div *ngIf="errorMessage" class="mb-4 p-3 bg-red-100 text-red-700 rounded-lg">
-      {{ errorMessage }}
-    </div>
+  <div class="grid grid-cols-1 gap-8 lg:grid-cols-5 lg:items-start">
+    <!-- Review form -->
+    <section aria-labelledby="review-form-title" class="card lg:sticky lg:top-24 lg:col-span-2">
+      <h2 id="review-form-title" class="section-title">Write a review</h2>
 
-    <!-- Input for Username (pre-filled if logged in but still editable) -->
-    <input
-      [(ngModel)]="username"
-      placeholder="Enter your name"
-      class="w-full mb-4 p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-400"
-    />
-
-    <!-- Input for Bus Number (optional) -->
-    <input
-      [(ngModel)]="busNumber"
-      placeholder="Bus Number (optional)"
-      class="w-full mb-4 p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-400"
-    />
-
-    <!-- Rating Selection -->
-    <div class="mb-4">
-      <label class="block text-gray-700 mb-2">Rating:</label>
-      <div class="flex space-x-2">
-        <button 
-          *ngFor="let star of [1,2,3,4,5]" 
-          (click)="rating = star"
-          class="text-2xl"
-          [class.text-yellow-500]="star <= rating"
-          [class.text-gray-300]="star > rating"
-        >
-          ★
-        </button>
-      </div>
-    </div>
-
-    <!-- Textarea for Review -->
-    <textarea
-      [(ngModel)]="review"
-      placeholder="Write your review"
-      rows="3"
-      class="w-full mb-4 p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-400"
-    ></textarea>
-
-    <!-- Submit Button -->
-    <button
-      (click)="addReview()"
-      [disabled]="isSubmitting"
-      class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-8 rounded-full transition transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-    >
-      {{ isSubmitting ? 'Submitting...' : 'Submit Review' }}
-    </button>
-  </div>
-
-  <!-- Reviews List -->
-  <div class="mt-4 w-full">
-    <h3 class="text-xl font-semibold text-gray-700 mb-3">Recent Reviews</h3>
-
-    <div
-      *ngFor="let r of reviews"
-      class="p-4 border border-gray-200 rounded-xl mb-3 bg-gray-50"
-    >
-      <div class="flex justify-between items-start mb-2">
-        <p class="font-bold text-gray-800">{{ r.username }}</p>
-        <div class="flex">
-          <span *ngFor="let star of [1,2,3,4,5]" 
-                [class.text-yellow-500]="star <= r.rating"
-                [class.text-gray-300]="star > r.rating">★</span>
+      <div aria-live="polite" class="space-y-3">
+        <div *ngIf="successMessage" class="alert-success mb-4" role="status">
+          <span aria-hidden="true">✓</span>
+          <span>{{ successMessage }}</span>
+        </div>
+        <div *ngIf="errorMessage" class="alert-error mb-4" role="alert">
+          <span aria-hidden="true">!</span>
+          <span>{{ errorMessage }}</span>
         </div>
       </div>
-      <p *ngIf="r.busNumber" class="text-sm text-gray-500 mb-2">Bus: {{ r.busNumber }}</p>
-      <p class="text-gray-600">{{ r.comment }}</p>
-      <p *ngIf="r.createdAt" class="text-xs text-gray-400 mt-2">
-        {{ r.createdAt | date:'medium' }}
-      </p>
-    </div>
 
-    <!-- No Reviews Message -->
-    <div *ngIf="reviews.length === 0" class="p-4 text-center text-gray-500">
-      No reviews yet. Be the first to leave a review!
-    </div>
+      <form #reviewForm="ngForm" (ngSubmit)="addReview(reviewForm)" novalidate class="space-y-5">
+        <div>
+          <label for="review-username" class="form-label">Your name <span class="font-normal text-slate-500">(optional)</span></label>
+          <input
+            id="review-username"
+            name="username"
+            [(ngModel)]="username"
+            placeholder="Anonymous"
+            autocomplete="name"
+            maxlength="60"
+            class="form-input"
+          />
+        </div>
+
+        <div>
+          <label for="review-bus" class="form-label">Bus number <span class="font-normal text-slate-500">(optional)</span></label>
+          <input
+            id="review-bus"
+            name="busNumber"
+            [(ngModel)]="busNumber"
+            placeholder="e.g. 10K"
+            maxlength="20"
+            class="form-input"
+          />
+        </div>
+
+        <div>
+          <span id="rating-label" class="form-label">Rating <span aria-hidden="true" class="text-red-600">*</span></span>
+          <div role="group" aria-labelledby="rating-label" aria-describedby="rating-error" class="flex gap-1">
+            <button
+              *ngFor="let star of stars"
+              type="button"
+              (click)="setRating(star)"
+              [attr.aria-label]="star + (star === 1 ? ' star' : ' stars')"
+              [attr.aria-pressed]="rating === star"
+              class="rounded-lg p-1 text-3xl leading-none transition hover:scale-110"
+              [ngClass]="star <= rating ? 'text-accent-500' : 'text-slate-300 hover:text-accent-400'"
+            >
+              <span aria-hidden="true">★</span>
+            </button>
+          </div>
+          <p *ngIf="rating > 0" class="form-hint">{{ rating }} out of 5 stars selected</p>
+          <p id="rating-error" *ngIf="submitted && ratingError" class="form-error">{{ ratingError }}</p>
+        </div>
+
+        <div>
+          <label for="review-comment" class="form-label">Your review <span aria-hidden="true" class="text-red-600">*</span></label>
+          <textarea
+            id="review-comment"
+            name="review"
+            [(ngModel)]="review"
+            placeholder="How was the service, timing and comfort?"
+            rows="4"
+            required
+            [attr.maxlength]="maxCommentLength"
+            [attr.aria-invalid]="submitted && !!commentError"
+            aria-describedby="comment-count comment-error"
+            class="form-input resize-y"
+            [class.border-red-400]="submitted && !!commentError"
+          ></textarea>
+          <div class="mt-1.5 flex items-start justify-between gap-3">
+            <p id="comment-error" class="form-error mt-0" [class.invisible]="!(submitted && commentError)">
+              {{ submitted ? commentError : '' }}
+            </p>
+            <p id="comment-count" class="shrink-0 text-xs"
+               [ngClass]="review.length > maxCommentLength - 50 ? 'text-accent-600 font-medium' : 'text-slate-500'">
+              {{ review.length }}/{{ maxCommentLength }}
+            </p>
+          </div>
+        </div>
+
+        <button type="submit" [disabled]="isSubmitting" class="btn-primary w-full">
+          <span *ngIf="isSubmitting" class="spinner h-4 w-4" aria-hidden="true"></span>
+          {{ isSubmitting ? 'Submitting…' : 'Submit review' }}
+        </button>
+      </form>
+    </section>
+
+    <!-- Reviews list -->
+    <section aria-labelledby="reviews-list-title" class="lg:col-span-3">
+      <div class="mb-4 flex flex-wrap items-end justify-between gap-3">
+        <h2 id="reviews-list-title" class="section-title mb-0">Recent reviews</h2>
+        <p *ngIf="reviews.length > 0" class="flex items-center gap-2 text-sm text-slate-600" aria-live="polite">
+          <span class="text-lg font-bold text-slate-900">{{ averageRating | number:'1.1-1' }}</span>
+          <span class="text-accent-500" aria-hidden="true">★</span>
+          <span>average from {{ reviews.length }} {{ reviews.length === 1 ? 'review' : 'reviews' }}</span>
+        </p>
+      </div>
+
+      <div aria-live="polite" [attr.aria-busy]="isLoading">
+        <div *ngIf="isLoading && reviews.length === 0" class="card flex items-center justify-center gap-3 text-slate-600" role="status">
+          <span class="spinner text-brand-600" aria-hidden="true"></span>
+          <span>Loading reviews…</span>
+        </div>
+
+        <div *ngIf="!isLoading && reviews.length === 0" class="empty-state">
+          <span aria-hidden="true" class="mb-2 text-3xl">💬</span>
+          <p class="font-semibold text-slate-900">No reviews yet</p>
+          <p class="mt-1 text-sm text-slate-600">Be the first to share your experience.</p>
+        </div>
+
+        <ul *ngIf="reviews.length > 0" class="space-y-4">
+          <li *ngFor="let r of reviews">
+            <article class="card">
+              <div class="flex flex-wrap items-start justify-between gap-2">
+                <div>
+                  <h3 class="font-semibold text-slate-900">{{ r.username }}</h3>
+                  <p *ngIf="r.createdAt" class="text-xs text-slate-500">
+                    <time [attr.datetime]="r.createdAt">{{ r.createdAt | date:'medium' }}</time>
+                  </p>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span *ngIf="r.busNumber" class="badge-brand">Bus {{ r.busNumber }}</span>
+                  <span class="flex text-base leading-none" role="img" [attr.aria-label]="'Rated ' + r.rating + ' out of 5 stars'">
+                    <span *ngFor="let star of stars" aria-hidden="true"
+                          [ngClass]="star <= r.rating ? 'text-accent-500' : 'text-slate-300'">★</span>
+                  </span>
+                </div>
+              </div>
+              <p class="mt-3 break-words text-slate-700">{{ r.comment }}</p>
+            </article>
+          </li>
+        </ul>
+      </div>
+
+      <a [routerLink]="['/home']" class="btn-ghost btn-sm mt-6">← Back to dashboard</a>
+    </section>
   </div>
-
-  <!-- Back to Home Button -->
-  <button
-    [routerLink]="['/']"
-    class="mt-6 text-sm text-gray-500 hover:text-indigo-600"
-  >
-    ← Back to Home Page
-  </button>
-</div>
+</section>

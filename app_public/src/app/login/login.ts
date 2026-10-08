@@ -1,87 +1,94 @@
-// app/login/login.ts
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { HttpClientModule } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../services/auth.service';
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [FormsModule, RouterLink, HttpClientModule, CommonModule],
+  imports: [FormsModule, RouterLink, CommonModule],
   template: `
-    <div class="flex flex-col items-center justify-center p-10 bg-white rounded-2xl shadow-xl max-w-lg mx-auto w-full">
-      <h2 class="text-3xl font-bold text-indigo-600 mb-6">Login to RouteFinder</h2>
+    <section class="page flex justify-center">
+      <div class="w-full max-w-md">
+        <div class="mb-8 text-center">
+          <h1 class="page-title">Welcome back</h1>
+          <p class="mt-2 text-slate-600">Log in to find and track your bus.</p>
+        </div>
 
-      <div *ngIf="errorMessage" class="w-full p-3 mb-4 bg-red-100 text-red-700 rounded-xl">
-        {{ errorMessage }}
+        <form class="card space-y-5" (ngSubmit)="login()" novalidate>
+          <div *ngIf="errorMessage" class="alert-error" role="alert">{{ errorMessage }}</div>
+
+          <div>
+            <label for="login-email" class="form-label">Email address</label>
+            <input id="login-email" name="email" type="email" autocomplete="email" required
+                   [(ngModel)]="email" class="form-input" placeholder="you@college.edu" />
+          </div>
+
+          <div>
+            <div class="flex items-center justify-between">
+              <label for="login-password" class="form-label">Password</label>
+              <button type="button" class="mb-1.5 text-xs font-medium text-brand-700 hover:underline"
+                      (click)="showPassword = !showPassword" [attr.aria-pressed]="showPassword">
+                {{ showPassword ? 'Hide' : 'Show' }}
+              </button>
+            </div>
+            <input id="login-password" name="password" [type]="showPassword ? 'text' : 'password'"
+                   autocomplete="current-password" required [(ngModel)]="password" class="form-input" />
+          </div>
+
+          <button type="submit" [disabled]="isLoading" class="btn-primary btn-lg w-full">
+            <span *ngIf="isLoading" class="spinner h-4 w-4" aria-hidden="true"></span>
+            {{ isLoading ? 'Logging in…' : 'Log in' }}
+          </button>
+
+          <p class="text-center text-sm text-slate-600">
+            Don't have an account?
+            <a routerLink="/register" class="font-semibold text-brand-700 hover:underline">Create one</a>
+          </p>
+        </form>
       </div>
-
-      <input 
-        [(ngModel)]="email" 
-        name="email" 
-        type="email"
-        placeholder="Email Address"
-        class="w-full mb-4 p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-400" 
-      />
-      
-      <input 
-        [(ngModel)]="password" 
-        name="password"
-        type="password"
-        placeholder="Password"
-        class="w-full mb-6 p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-400" 
-      />
-
-      <button 
-        (click)="login()"
-        [disabled]="isLoading"
-        class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-full transition transform hover:scale-[1.02] disabled:opacity-50">
-        {{ isLoading ? 'Logging in...' : 'Log In' }}
-      </button>
-
-      <p class="mt-4 text-sm text-gray-500">
-        Don't have an account? 
-        <a [routerLink]="['/register']" class="text-indigo-600 hover:text-indigo-800 font-medium cursor-pointer">Register here</a>
-      </p>
-    </div>
+    </section>
   `,
-  styles: ``
 })
 export class LoginComponent {
   email = '';
   password = '';
+  showPassword = false;
   isLoading = false;
   errorMessage = '';
 
   constructor(private authService: AuthService) {}
 
   login() {
-    if (!this.email || !this.password) {
-      this.errorMessage = 'Please enter both email and password';
+    const email = this.email.trim();
+    if (!email || !this.password) {
+      this.errorMessage = 'Please enter both email and password.';
+      return;
+    }
+    if (!EMAIL_PATTERN.test(email)) {
+      this.errorMessage = 'Please enter a valid email address.';
       return;
     }
 
     this.isLoading = true;
     this.errorMessage = '';
 
-    this.authService.login(this.email, this.password)
-      .subscribe({
-        next: (response) => {
-          this.isLoading = false;
-          console.log('Login successful', response);
-          // AuthService will handle the redirect to /home
-        },
-        error: (error) => {
-          this.isLoading = false;
-          console.error('Login error', error);
-          if (error.status === 0) {
-            this.errorMessage = 'Cannot connect to server. Please ensure the backend is running.';
-          } else {
-            this.errorMessage = error.error?.message || 'Login failed. Please check your credentials.';
-          }
+    this.authService.login(email, this.password).subscribe({
+      next: () => {
+        this.isLoading = false;
+        // AuthService handles the redirect to /home
+      },
+      error: (error) => {
+        this.isLoading = false;
+        if (error.status === 0) {
+          this.errorMessage = "Can't reach the server. Please make sure the backend is running.";
+        } else {
+          this.errorMessage = error.error?.message || 'Login failed. Please check your credentials.';
         }
-      });
+      },
+    });
   }
 }
