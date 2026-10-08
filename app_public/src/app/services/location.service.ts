@@ -1,3 +1,4 @@
+import { environment } from '../../environments/environment';
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { BehaviorSubject, Observable, interval, catchError, of, tap } from 'rxjs';
@@ -18,8 +19,8 @@ export interface LocationData {
   providedIn: 'root'
 })
 export class LocationService {
-  private apiUrl = 'http://localhost:3000/api/locations';
-  private coordinatesUrl = 'http://localhost:3000/api/coordinates';
+  private apiUrl = `${environment.apiUrl}/locations`;
+  private coordinatesUrl = `${environment.apiUrl}/coordinates`;
   private currentLocation = new BehaviorSubject<LocationData | null>(null);
   private trackingActive = false;
   private updateInterval = 60000; // Update every minute

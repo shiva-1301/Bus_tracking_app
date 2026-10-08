@@ -1,4 +1,8 @@
 const Review = require('../models/reviews');
+const { cleanString } = require('../utils/validation');
+
+const MAX_COMMENT_LENGTH = 500;
+const MAX_NAME_LENGTH = 50;
 
 // Get all reviews
 const getAllReviews = async (req, res) => {
@@ -14,16 +18,22 @@ const getAllReviews = async (req, res) => {
 // Add a new review
 const addReview = async (req, res) => {
     try {
-        const { username, busNumber, rating, comment } = req.body;
-        
+        const username = cleanString(req.body.username);
+        const busNumber = cleanString(req.body.busNumber);
+        const comment = cleanString(req.body.comment);
+        const rating = Number(req.body.rating);
+
         // Validate required fields
         if (!username || !rating || !comment) {
             return res.status(400).json({ error: 'Username, rating, and comment are required' });
         }
-        
-        // Validate rating range
-        if (rating < 1 || rating > 5) {
-            return res.status(400).json({ error: 'Rating must be between 1 and 5' });
+        if (username.length > MAX_NAME_LENGTH || comment.length > MAX_COMMENT_LENGTH) {
+            return res.status(400).json({ error: `Name must be at most ${MAX_NAME_LENGTH} and comment at most ${MAX_COMMENT_LENGTH} characters` });
+        }
+
+        // Validate rating range (whole stars only)
+        if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+            return res.status(400).json({ error: 'Rating must be a whole number between 1 and 5' });
         }
         
         // Create new review

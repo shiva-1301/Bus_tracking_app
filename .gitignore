@@ -5,3 +5,12 @@ node_modules/
 *.log
 .DS_Store
 
+
+# Environment secrets
+.env
+.env.*
+!.env.example
+
+# Angular build output
+app_public/dist/
+app_public/.angular/

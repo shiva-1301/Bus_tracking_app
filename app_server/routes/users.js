@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 // Import your controller functions
 const userController = require('../controllers/users');
+const { authenticateUser } = require('../middleware/auth');
 
 // --- Authentication Routes ---
 
@@ -23,7 +24,7 @@ router.get('/search/bus/:busNumber', userController.searchDrivers);
 
 // Route for drivers to update their location (requires driver to be logged in and authenticated)
 // Angular (Driver Dashboard) will PUT to /api/driver/location
-router.put('/driver/location', userController.updateLocation);
+router.put('/driver/location', authenticateUser, userController.updateLocation);
 
 
 module.exports = router;

@@ -1,12 +1,41 @@
-<div class="map-search-container">
-  <h2>📍 Your Current Location</h2>
+<section class="page max-w-xl">
+  <header class="page-header">
+    <h1 class="page-title">Your current location</h1>
+    <p class="page-subtitle">We use your device's location to help you find nearby buses.</p>
+  </header>
 
-  <div *ngIf="latitude && longitude; else loading">
-    <p>Latitude: {{ latitude }}</p>
-    <p>Longitude: {{ longitude }}</p>
+  <div class="card" aria-live="polite" [attr.aria-busy]="isLoading">
+    <div *ngIf="isLoading" class="flex items-center gap-3 text-slate-600" role="status">
+      <span class="spinner text-brand-600" aria-hidden="true"></span>
+      <span>Fetching your location…</span>
+    </div>
+
+    <div *ngIf="!isLoading && errorMessage" class="space-y-4">
+      <div class="alert-error" role="alert">
+        <span aria-hidden="true" class="font-bold">!</span>
+        <span>{{ errorMessage }}</span>
+      </div>
+      <button type="button" class="btn-secondary" (click)="getLocation()">Try again</button>
+    </div>
+
+    <div *ngIf="!isLoading && !errorMessage && latitude !== null && longitude !== null" class="space-y-5">
+      <dl class="grid grid-cols-2 gap-4 text-sm">
+        <div>
+          <dt class="text-slate-500">Latitude</dt>
+          <dd class="font-mono text-base font-semibold text-slate-900">{{ latitude | number:'1.5-6' }}</dd>
+        </div>
+        <div>
+          <dt class="text-slate-500">Longitude</dt>
+          <dd class="font-mono text-base font-semibold text-slate-900">{{ longitude | number:'1.5-6' }}</dd>
+        </div>
+      </dl>
+      <div class="flex flex-wrap gap-3">
+        <a [href]="mapsUrl" target="_blank" rel="noopener noreferrer" class="btn-primary">
+          Open in Google Maps
+          <span class="sr-only">(opens in a new tab)</span>
+        </a>
+        <button type="button" class="btn-ghost" (click)="getLocation()">Refresh</button>
+      </div>
+    </div>
   </div>
-
-  <ng-template #loading>
-    <p>Fetching your location...</p>
-  </ng-template>
-</div>
+</section>
